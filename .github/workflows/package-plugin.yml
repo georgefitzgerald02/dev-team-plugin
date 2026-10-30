@@ -1,0 +1,114 @@
+name: Package plugin
+
+# Validates the marketplace and plugin, then builds dev-team-plugin.zip in the
+# folder layout that claude.ai's "Upload plugin" expects.
+#
+# - Every run (push, PR, manual): the zip is attached to the run as an artifact.
+# - Push to main or manual run: the zip is also published to a rolling
+#   "latest" release, giving a stable download link:
+#   https://github.com/<owner>/<repo>/releases/download/latest/dev-team-plugin.zip
+# - Push a tag like v1.2.0: the zip is published to a versioned release too.
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    paths:
+      - "plugins/**"
+      - ".claude-plugin/**"
+      - ".github/workflows/package-plugin.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: package-plugin-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PLUGIN_DIR: plugins/dev-team
+  ZIP_NAME: dev-team-plugin.zip
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Claude Code CLI (used only for validation)
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Validate marketplace and plugin
+        run: |
+          claude plugin validate .
+          claude plugin validate "$PLUGIN_DIR"
+
+      - name: Check names match
+        run: |
+          manifest_name=$(jq -r .name "$PLUGIN_DIR/.claude-plugin/plugin.json")
+          entry_name=$(jq -r '.plugins[0].name' .claude-plugin/marketplace.json)
+          dir_name=$(basename "$PLUGIN_DIR")
+          echo "manifest=$manifest_name entry=$entry_name dir=$dir_name"
+          if [ "$manifest_name" != "$entry_name" ] || [ "$manifest_name" != "$dir_name" ]; then
+            echo "::error::plugin.json name, marketplace entry name and folder name must all match"
+            exit 1
+          fi
+
+      - name: Build zip
+        run: |
+          # Zip the plugin folder itself (not its contents) so the archive has
+          # dev-team/.claude-plugin/plugin.json at the top level.
+          cd "$(dirname "$PLUGIN_DIR")"
+          zip -r -X "$GITHUB_WORKSPACE/$ZIP_NAME" "$(basename "$PLUGIN_DIR")" \
+            -x '*.DS_Store' -x '*/Thumbs.db' -x '*/.git/*'
+          cd "$GITHUB_WORKSPACE"
+          echo "Contents:"
+          unzip -l "$ZIP_NAME"
+
+      - name: Check zip structure
+        run: |
+          count=$(unzip -Z1 "$ZIP_NAME" | grep -c '\.claude-plugin/plugin\.json$' || true)
+          if [ "$count" -ne 1 ]; then
+            echo "::error::Expected exactly one .claude-plugin/plugin.json in the zip, found $count"
+            exit 1
+          fi
+          unzip -Z1 "$ZIP_NAME" | grep -q '^dev-team/skills/ship-feature/SKILL.md$'
+          [ "$(unzip -Z1 "$ZIP_NAME" | grep -c '^dev-team/agents/.*\.md$')" -ge 1 ]
+          echo "Zip structure OK"
+
+      - name: Upload as run artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dev-team-plugin
+          path: ${{ env.ZIP_NAME }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish rolling "latest" release
+        if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --cleanup-tag --yes || true
+          gh release create latest "$ZIP_NAME" \
+            --target "$GITHUB_SHA" \
+            --title "Latest build" \
+            --notes "dev-team plugin built from ${GITHUB_SHA::7}. Upload via Customize → Plugins → Add → Upload plugin." \
+            --prerelease
+
+      - name: Publish versioned release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "$ZIP_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes

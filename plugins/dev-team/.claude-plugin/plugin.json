@@ -1,0 +1,7 @@
+{
+  "name": "dev-team",
+  "description": "Orchestrator plus developer, tester, reviewer, designer, security-reviewer and docs-writer agents that turn a feature request into a tested, reviewed draft PR.",
+  "author": {
+    "name": "gwfitzg"
+  }
+}

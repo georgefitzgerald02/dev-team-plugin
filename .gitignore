@@ -1,0 +1,8 @@
+# Built by GitHub Actions; don't commit it
+dev-team-plugin.zip
+*.zip
+
+# OS clutter
+.DS_Store
+Thumbs.db
+desktop.ini
