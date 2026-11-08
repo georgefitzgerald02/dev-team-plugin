@@ -57,11 +57,11 @@ this repo reach your account automatically.
    - For a private repo, connect GitHub and give the Claude GitHub App
      access to this repo when the dialog asks.
 3. Find **dev-team** in the marketplace and select **Add**.
-4. Turn on **Sync automatically** for the marketplace, so pushes to `main`
+4. Turn on **Sync automatically** for the marketplace, so pushes to `master`
    reach your account without you doing anything.
 
 To update the plugin later, edit files under `plugins/dev-team/` and push to
-`main`. You can do this from the GitHub app, or by asking Claude in a cloud
+`master`. You can do this from the GitHub app, or by asking Claude in a cloud
 session on this repo. New sessions pick up the change. If one doesn't, use
 **Check for updates** on the marketplace.
 
@@ -74,7 +74,7 @@ flowing.
 Use this route if you'd rather not add a marketplace, or want to pin an exact
 build.
 
-1. Push to `main` (or run the workflow by hand: **Actions → Package plugin →
+1. Push to `master` (or run the workflow by hand: **Actions → Package plugin →
    Run workflow**). The workflow validates the plugin and builds
    `dev-team-plugin.zip`.
 2. Download the zip from the **rolling release**, which works in Safari on
@@ -155,8 +155,8 @@ enabled on the PR, Claude responds to review comments and CI failures.
 - **Add preview deployments** (Vercel, Netlify or Cloudflare Pages) so each
   PR gets a link you can open on an iPad. The orchestrator puts the preview
   URL in the PR when a deploy bot posts one.
-- **Turn on branch protection** on `main` in your repos: require a PR and
-  passing checks. The agents are told never to merge or push to `main`;
+- **Turn on branch protection** on `master` in your repos: require a PR and
+  passing checks. The agents are told never to merge or push to `master`;
   branch protection makes that a hard rule.
 
 ## Customising

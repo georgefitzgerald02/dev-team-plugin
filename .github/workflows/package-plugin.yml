@@ -4,14 +4,14 @@ name: Package plugin
 # folder layout that claude.ai's "Upload plugin" expects.
 #
 # - Every run (push, PR, manual): the zip is attached to the run as an artifact.
-# - Push to main or manual run: the zip is also published to a rolling
+# - Push to master or manual run: the zip is also published to a rolling
 #   "latest" release, giving a stable download link:
 #   https://github.com/<owner>/<repo>/releases/download/latest/dev-team-plugin.zip
 # - Push a tag like v1.2.0: the zip is published to a versioned release too.
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     tags: ["v*"]
   pull_request:
     paths:
@@ -93,7 +93,7 @@ jobs:
           retention-days: 30
 
       - name: Publish rolling "latest" release
-        if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+        if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/master')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
