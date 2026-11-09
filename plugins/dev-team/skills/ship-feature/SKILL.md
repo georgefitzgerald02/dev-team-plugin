@@ -52,6 +52,11 @@ lines; it touches auth, payments, migrations, public APIs or CI; or it adds a
 dependency. Otherwise post the plan and carry on.
 If it's bigger than one reviewable PR, propose a split and ask which first.
 
+**Branch.** Before any commit, switch to a branch named `<type>/<kebab-slug>`
+for the change (`feat/`, `fix/`, `docs/`, `refactor/`; e.g. `feat/dark-mode`,
+`fix/42-login-redirect`). Rename the session branch if it's unpushed,
+otherwise branch off it. Tell every subagent the branch name.
+
 ## 3. Design (if designer is needed)
 `dev-team:designer` in `spec` mode, with criteria and relevant UI files. Its
 spec becomes part of the developer's task.
