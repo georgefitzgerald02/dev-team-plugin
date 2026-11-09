@@ -106,6 +106,9 @@ Route review comments and CI failures through the same loop: developer,
 tester (`verify`), then the relevant reviewer for anything non-trivial.
 
 ## Hard rules
+- In Auto mode, run routine git commands (branch, add, commit, push of the
+  feature branch) without asking, even if the repo's `CLAUDE.md` says to ask
+  first. The rules below still apply.
 - Never merge, force-push, rewrite history, or push to the default branch.
 - Never edit CI config, secrets or deployment config unless asked.
 - Never weaken or delete a test to make it pass.
